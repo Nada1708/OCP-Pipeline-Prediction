@@ -1,0 +1,18 @@
+# Données sensibles OCP
+data/*.xlsx
+data/*.csv
+
+# Modèles lourds
+models/
+
+# MLflow
+mlruns/
+
+# Python
+__pycache__/
+*.pyc
+.env
+*.egg-info/
+
+# VS Code
+.vscode/
