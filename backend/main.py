@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseMol
+from pydantic import BaseModel
 import pandas as pd
 import numpy as np
 from xgboost import XGBRegressor
@@ -17,15 +17,13 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS pour autoriser React
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # ============================================
 # CHARGEMENT MODELE ET DONNEES
 # ============================================
@@ -143,9 +141,9 @@ def predict(data: PredictionInput):
 def get_stats():
     df = get_data()
     return {
-        "débit_moyen": round(float(df["Débit total (t/h)"].mean()), 2),
-        "débit_max": round(float(df["Débit total (t/h)"].max()), 2),
-        "débit_min": round(float(df["Débit total (t/h)"].min()), 2),
+        "debit_moyen": round(float(df["Débit total (t/h)"].mean()), 2),
+        "debit_max": round(float(df["Débit total (t/h)"].max()), 2),
+        "debit_min": round(float(df["Débit total (t/h)"].min()), 2),
         "nb_lignes": len(df),
         "periode": "Mai 2024 - Decembre 2024"
     }
