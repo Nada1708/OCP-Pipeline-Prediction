@@ -15,7 +15,31 @@ df["débit_lag_168h"] = df["Débit total (t/h)"].shift(168)
 df["diff_1h"]        = df["Débit total (t/h)"].diff(1)
 df["diff_24h"]       = df["Débit total (t/h)"].diff(24)
 df = df.dropna().reset_index(drop=True)
+# ===== INTEGRATION JFT CORRIGE =====
+xl_jft = pd.ExcelFile("Data/Extraction JFT Mai et Juin.xlsx")
+dfs_jft = []
+for sheet in xl_jft.sheet_names:
+    df_j = pd.read_excel(xl_jft, sheet_name=sheet, header=None)
+    data = df_j.iloc[6:, [4, 5]].copy()
+    data.columns = ['timestamp', 'JFT_corrige']
+    data['timestamp'] = pd.to_datetime(data['timestamp'], errors='coerce')
+    data = data.dropna(subset=['timestamp'])
+    data['JFT_corrige'] = pd.to_numeric(data['JFT_corrige'], errors='coerce')
+    dfs_jft.append(data)
+df_jft = pd.concat(dfs_jft).sort_values('timestamp').reset_index(drop=True)
 
+# Fusionner avec dataset principal
+df = df.merge(df_jft, left_on='Timestamp', right_on='timestamp', how='left')
+
+# Mettre a jour le debit total
+df['JFT_corrige'] = df['JFT_corrige'].fillna(0)
+df['Débit total (t/h)'] = df['Débit total (t/h)'] + df['JFT_corrige']
+
+# Supprimer colonnes temporaires
+df = df.drop(columns=['timestamp', 'JFT_corrige'], errors='ignore')
+
+print(f"Dataset avec JFT integre : {len(df)} lignes")
+print(f"Debit moyen apres correction : {df['Débit total (t/h)'].mean():.2f} t/h")
 # 2. Features et cible
 features = [
     "Heure (0-23)",
