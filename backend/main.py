@@ -132,7 +132,7 @@ def predict(data: PredictionInput):
         statut = "faible"
 
     return {
-        "débit_predit": round(prediction, 2),
+        "debit_predit": round(prediction, 2),
         "unite": "t/h",
         "statut": statut
     }
@@ -175,14 +175,14 @@ def get_historique(limit: int = 200):
     data = df[["Timestamp", "Débit total (t/h)"]].tail(limit)
     return {
         "timestamps": data["Timestamp"].astype(str).tolist(),
-        "débits": data["Débit total (t/h)"].tolist()
-    }
+        "debits": data["Débit total (t/h)"].tolist()
+}
 
-@app.get("/débit-par-heure")
-def get_débit_par_heure():
+@app.get("/debit-par-heure")
+def get_debit_par_heure():
     df = get_data()
     result = df.groupby("Heure (0-23)")["Débit total (t/h)"].mean().reset_index()
     return {
         "heures": result["Heure (0-23)"].tolist(),
-        "débits": result["Débit total (t/h)"].round(2).tolist()
+        "debits": result["Débit total (t/h)"].round(2).tolist()
     }

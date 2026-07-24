@@ -34,7 +34,7 @@ function Dashboard() {
     <div style={{ padding: '30px' }}>
 
       <h2 style={{ color: '#00843D', borderBottom: '2px solid #00843D', paddingBottom: '10px' }}>
-        📊 Dashboard — Analyse des données
+         Dashboard — Analyse des données
       </h2>
 
       {/* Stats */}
@@ -55,7 +55,7 @@ function Dashboard() {
 
       {/* Graphe historique */}
       <div style={{ background: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)', marginBottom: '20px' }}>
-        <h3 style={{ color: '#00843D' }}>📈 Historique du débit (100 dernières heures)</h3>
+        <h3 style={{ color: '#00843D' }}> Historique du débit (100 dernières heures)</h3>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={historique}>
             <CartesianGrid strokeDasharray="3 3" />
@@ -70,7 +70,7 @@ function Dashboard() {
 
       {/* Graphe par heure */}
       <div style={{ background: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
-        <h3 style={{ color: '#00843D' }}>🕐 Débit moyen par heure</h3>
+        <h3 style={{ color: '#00843D' }}> Débit moyen par heure</h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={debitHeure}>
             <CartesianGrid strokeDasharray="3 3" />

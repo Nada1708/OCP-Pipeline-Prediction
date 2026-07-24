@@ -21,6 +21,6 @@ def test_api_prediction():
     response = requests.post("http://127.0.0.1:8000/predict", json=payload)
     assert response.status_code == 200
     data = response.json()
-    assert "débit_predit" in data
-    assert 0 < data["débit_predit"] < 3000
-    print(f"✅ Prédiction OK : {data['débit_predit']} t/h")
+    assert "debit_predit" in data
+    assert 0 < data["debit_predit"] < 3000
+    print(f"✅ Prédiction OK : {data['debit_predit']} t/h")
