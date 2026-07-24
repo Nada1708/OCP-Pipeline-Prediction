@@ -8,13 +8,17 @@ import Performances from './pages/Performances'
 function App() {
   return (
     <BrowserRouter>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Accueil />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/prediction" element={<Prediction />} />
-        <Route path="/performances" element={<Performances />} />
-      </Routes>
+      <div style={{ display: 'flex' }}>
+        <Navbar />
+        <div style={{ marginLeft: '180px', flex: 1, minHeight: '100vh', background: '#f5f5f5' }}>
+          <Routes>
+            <Route path="/" element={<Accueil />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/prediction" element={<Prediction />} />
+            <Route path="/performances" element={<Performances />} />
+          </Routes>
+        </div>
+      </div>
     </BrowserRouter>
   )
 }

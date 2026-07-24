@@ -24,7 +24,7 @@ function Accueil() {
         color: 'white',
         marginBottom: '30px'
       }}>
-        <h1>🏭 OCP — Prédiction du Débit Horaire</h1>
+        <h1> Prédiction du Débit Horaire</h1>
         <p>Pipeline Khouribga → Jorf Lasfar | Système MLOps</p>
       </div>
 
@@ -65,12 +65,12 @@ function Accueil() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
 
         <div style={{ background: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
-          <h3 style={{ color: '#00843D' }}>🎯 Objectif</h3>
+          <h3 style={{ color: '#00843D' }}> Objectif</h3>
           <p>Prédire le débit horaire (t/h) nécessaire à envoyer depuis Khouribga vers les clients de Jorf Lasfar.</p>
         </div>
 
         <div style={{ background: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
-          <h3 style={{ color: '#00843D' }}>👤 Projet</h3>
+          <h3 style={{ color: '#00843D' }}> Projet</h3>
           <p><b>Stagiaire :</b> Nada Elaali</p>
           <p><b>Superviseur :</b> M. Othmane Salama</p>
           <p><b>Modèle :</b> XGBoost v3</p>

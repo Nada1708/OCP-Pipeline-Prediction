@@ -38,14 +38,14 @@ function Prediction() {
     <div style={{ padding: '30px' }}>
 
       <h2 style={{ color: '#00843D', borderBottom: '2px solid #00843D', paddingBottom: '10px' }}>
-        🔮 Prédiction du Débit Horaire
+         Prédiction du Débit Horaire
       </h2>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
 
         {/* Formulaire */}
         <div style={{ background: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
-          <h3 style={{ color: '#00843D' }}>⚙️ Paramètres</h3>
+          <h3 style={{ color: '#00843D' }}> Paramètres</h3>
 
           {[
             { label: 'Heure (0-23)', name: 'heure', min: 0, max: 23 },
@@ -89,13 +89,13 @@ function Prediction() {
               marginTop: '10px'
             }}
           >
-            {loading ? 'Calcul en cours...' : '🔮 Prédire le débit'}
+            {loading ? 'Calcul en cours...' : ' Prédire le débit'}
           </button>
         </div>
 
         {/* Résultat */}
         <div style={{ background: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
-          <h3 style={{ color: '#00843D' }}>📊 Résultat</h3>
+          <h3 style={{ color: '#00843D' }}> Résultat</h3>
 
           {resultat ? (
             <div>
@@ -125,7 +125,7 @@ function Prediction() {
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '80px', color: '#888' }}>
-              <div style={{ fontSize: '3rem' }}>🔮</div>
+              <div style={{ fontSize: '3rem' }}></div>
               <p>Remplissez les paramètres<br />et cliquez sur Prédire</p>
             </div>
           )}
