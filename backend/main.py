@@ -148,6 +148,54 @@ def get_stats():
         "periode": "Mai 2024 - Decembre 2024"
     }
 
+@app.get("/predict-auto")
+def predict_auto(heure: int, jour_semaine: int, mois: int, jour_mois: int):
+    df = get_data()
+    m = get_model()
+
+    # Prendre les dernieres valeurs depuis l'historique
+    derniere_ligne = df.iloc[-1]
+    
+    heure_sin = np.sin(2 * np.pi * heure / 24)
+    heure_cos = np.cos(2 * np.pi * heure / 24)
+    est_weekend = 1 if jour_semaine >= 5 else 0
+
+    X = pd.DataFrame([[
+        heure, jour_semaine, mois, jour_mois, est_weekend,
+        heure_sin, heure_cos,
+        float(df["Débit total (t/h)"].iloc[-1]),
+        float(df["Débit total (t/h)"].iloc[-2]),
+        float(df["Débit total (t/h)"].iloc[-3]),
+        float(df["Débit total (t/h)"].iloc[-6]),
+        float(df["Débit total (t/h)"].iloc[-12]),
+        float(df["Débit total (t/h)"].iloc[-24]),
+        float(df["Débit total (t/h)"].iloc[-3:].mean()),
+        float(df["Débit total (t/h)"].iloc[-6:].mean()),
+        float(df["Débit total (t/h)"].iloc[-12:].mean()),
+        float(df["Débit total (t/h)"].iloc[-24:].mean()),
+        float(df["Débit total (t/h)"].iloc[-6:].std()),
+        float(df["Vente/heure (TSM)"].iloc[-1]),
+        float(df["Débit total (t/h)"].iloc[-48]),
+        float(df["Débit total (t/h)"].iloc[-168]),
+        float(df["Débit total (t/h)"].iloc[-1] - df["Débit total (t/h)"].iloc[-2]),
+        float(df["Débit total (t/h)"].iloc[-1] - df["Débit total (t/h)"].iloc[-24]),
+    ]], columns=FEATURES)
+
+    prediction = float(m.predict(X)[0])
+
+    if prediction > 1600:
+        statut = "eleve"
+    elif prediction > 1200:
+        statut = "normal"
+    else:
+        statut = "faible"
+
+    return {
+        "debit_predit": round(prediction, 2),
+        "unite": "t/h",
+        "statut": statut
+    }
+
 @app.get("/performances")
 def get_performances():
     df = get_data()

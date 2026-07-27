@@ -3,24 +3,29 @@ import axios from 'axios'
 
 function Prediction() {
   const [form, setForm] = useState({
-    heure: 8, jour_semaine: 0, mois: 6, jour_mois: 15,
-    est_weekend: 0, lag_1h: 1500, lag_2h: 1480, lag_3h: 1460,
-    lag_6h: 1450, lag_12h: 1440, lag_24h: 1500,
-    rolling_3h: 1480, rolling_6h: 1470, rolling_12h: 1460,
-    rolling_24h: 1450, std_6h: 30, vente_heure: 2500,
-    lag_48h: 1490, lag_168h: 1500, diff_1h: 20, diff_24h: 0
+    heure: new Date().getHours(),
+    jour_semaine: new Date().getDay() === 0 ? 6 : new Date().getDay() - 1,
+    mois: new Date().getMonth() + 1,
+    jour_mois: new Date().getDate()
   })
   const [resultat, setResultat] = useState(null)
   const [loading, setLoading] = useState(false)
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: parseFloat(e.target.value) })
+    setForm({ ...form, [e.target.name]: parseInt(e.target.value) })
   }
 
   const predire = async () => {
     setLoading(true)
     try {
-      const res = await axios.post('http://127.0.0.1:8000/predict', form)
+      const res = await axios.get('http://127.0.0.1:8000/predict-auto', {
+        params: {
+          heure: form.heure,
+          jour_semaine: form.jour_semaine,
+          mois: form.mois,
+          jour_mois: form.jour_mois
+        }
+      })
       setResultat(res.data)
     } catch {
       alert('Erreur de prédiction')
@@ -34,81 +39,114 @@ function Prediction() {
     faible: '#FFC107'
   }
 
+  const jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+  const mois = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+                 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
+
   return (
     <div style={{ padding: '30px' }}>
 
       <h2 style={{ color: '#00843D', borderBottom: '2px solid #00843D', paddingBottom: '10px' }}>
-         Prédiction du Débit Horaire
+        Prédiction du Débit Horaire
       </h2>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
 
-        {/* Formulaire */}
-        <div style={{ background: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
-          <h3 style={{ color: '#00843D' }}> Paramètres</h3>
+        <div style={{ background: 'white', padding: '30px', borderRadius: '10px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
+          <h3 style={{ color: '#00843D', marginBottom: '20px' }}>Paramètres</h3>
 
-          {[
-            { label: 'Heure (0-23)', name: 'heure', min: 0, max: 23 },
-            { label: 'Jour semaine (0=Lundi, 6=Dimanche)', name: 'jour_semaine', min: 0, max: 6 },
-            { label: 'Mois (1-12)', name: 'mois', min: 1, max: 12 },
-            { label: 'Débit il y a 1h (t/h)', name: 'lag_1h', min: 0, max: 3000 },
-            { label: 'Débit il y a 24h (t/h)', name: 'lag_24h', min: 0, max: 3000 },
-            { label: 'Débit il y a 48h (t/h)', name: 'lag_48h', min: 0, max: 3000 },
-            { label: 'Débit il y a 168h (t/h)', name: 'lag_168h', min: 0, max: 3000 },
-            { label: 'Moyenne 3h (t/h)', name: 'rolling_3h', min: 0, max: 3000 },
-            { label: 'Vente/heure (TSM)', name: 'vente_heure', min: 0, max: 5000 },
-          ].map((field) => (
-            <div key={field.name} style={{ marginBottom: '12px' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: '#555', marginBottom: '4px' }}>
-                {field.label}
-              </label>
-              <input
-                type="number"
-                name={field.name}
-                value={form[field.name]}
-                onChange={handleChange}
-                min={field.min}
-                max={field.max}
-                style={{
-                  width: '100%', padding: '8px', borderRadius: '6px',
-                  border: '1px solid #ddd', fontSize: '0.9rem'
-                }}
-              />
-            </div>
-          ))}
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', color: '#555', marginBottom: '8px', fontWeight: 'bold' }}>
+              Heure de prédiction
+            </label>
+            <input
+              type="number"
+              name="heure"
+              value={form.heure}
+              onChange={handleChange}
+              min={0} max={23}
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem' }}
+            />
+            <small style={{ color: '#888' }}>Entre 0 (minuit) et 23</small>
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', color: '#555', marginBottom: '8px', fontWeight: 'bold' }}>
+              Jour de la semaine
+            </label>
+            <select
+              name="jour_semaine"
+              value={form.jour_semaine}
+              onChange={handleChange}
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem' }}
+            >
+              {jours.map((j, i) => (
+                <option key={i} value={i}>{j}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', color: '#555', marginBottom: '8px', fontWeight: 'bold' }}>
+              Mois
+            </label>
+            <select
+              name="mois"
+              value={form.mois}
+              onChange={handleChange}
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem' }}
+            >
+              {mois.map((m, i) => (
+                <option key={i} value={i + 1}>{m}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ marginBottom: '25px' }}>
+            <label style={{ display: 'block', color: '#555', marginBottom: '8px', fontWeight: 'bold' }}>
+              Jour du mois
+            </label>
+            <input
+              type="number"
+              name="jour_mois"
+              value={form.jour_mois}
+              onChange={handleChange}
+              min={1} max={31}
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem' }}
+            />
+          </div>
 
           <button
             onClick={predire}
             disabled={loading}
             style={{
-              width: '100%', padding: '12px',
+              width: '100%', padding: '14px',
               background: loading ? '#888' : '#00843D',
               color: 'white', border: 'none',
-              borderRadius: '8px', fontSize: '1rem',
+              borderRadius: '8px', fontSize: '1.1rem',
               cursor: loading ? 'not-allowed' : 'pointer',
-              marginTop: '10px'
+              fontWeight: 'bold'
             }}
           >
-            {loading ? 'Calcul en cours...' : ' Prédire le débit'}
+            {loading ? 'Calcul en cours...' : 'Prédire le débit'}
           </button>
         </div>
 
-        {/* Résultat */}
-        <div style={{ background: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
-          <h3 style={{ color: '#00843D' }}> Résultat</h3>
+        <div style={{ background: 'white', padding: '30px', borderRadius: '10px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
+          <h3 style={{ color: '#00843D', marginBottom: '20px' }}>Résultat</h3>
 
           {resultat ? (
             <div>
               <div style={{
                 background: `linear-gradient(135deg, ${couleurStatut[resultat.statut]}, #005a2b)`,
-                padding: '40px', borderRadius: '15px',
+                padding: '50px', borderRadius: '15px',
                 textAlign: 'center', color: 'white', margin: '20px 0'
               }}>
-                <div style={{ fontSize: '1rem', opacity: 0.8 }}>Débit prédit</div>
-                <div style={{ fontSize: '3rem', fontWeight: 'bold' }}>
-                  {resultat.debit_predit}
+                <div style={{ fontSize: '1rem', opacity: 0.8, marginBottom: '10px' }}>Débit prédit</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '4rem', fontWeight: 'bold' }}>{resultat.debit_predit}</span>
+                  <span style={{ fontSize: '2rem' }}>t/h</span>
                 </div>
-                <div style={{ fontSize: '1.2rem' }}>t/h</div>
               </div>
 
               <div style={{
@@ -116,17 +154,19 @@ function Prediction() {
                 background: couleurStatut[resultat.statut] + '20',
                 border: `2px solid ${couleurStatut[resultat.statut]}`
               }}>
-                <b style={{ color: couleurStatut[resultat.statut] }}>
-                  {resultat.statut === 'eleve' && '🟢 Débit élevé — Production optimale'}
-                  {resultat.statut === 'normal' && '🔵 Débit normal — Production standard'}
-                  {resultat.statut === 'faible' && '🟡 Débit faible — Vérifier le pipeline'}
+                <b style={{ color: couleurStatut[resultat.statut], fontSize: '1.1rem' }}>
+                  {resultat.statut === 'eleve' && 'Débit élevé — Production optimale'}
+                  {resultat.statut === 'normal' && 'Débit normal — Production standard'}
+                  {resultat.statut === 'faible' && 'Débit faible — Vérifier le pipeline'}
                 </b>
               </div>
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '80px', color: '#888' }}>
-              <div style={{ fontSize: '3rem' }}></div>
-              <p>Remplissez les paramètres<br />et cliquez sur Prédire</p>
+              <div style={{ fontSize: '4rem', marginBottom: '20px' }}></div>
+              <p style={{ fontSize: '1.1rem' }}>
+                Sélectionnez les paramètres<br />et cliquez sur Prédire
+              </p>
             </div>
           )}
         </div>
