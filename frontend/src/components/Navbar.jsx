@@ -5,7 +5,7 @@ function Navbar() {
 
   return (
     <div style={{
-      width: '200px',
+      width: '250px',
       minHeight: '100vh',
       background: 'white',
       borderRight: '2px solid #e0e0e0',

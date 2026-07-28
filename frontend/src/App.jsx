@@ -10,7 +10,7 @@ function App() {
     <BrowserRouter>
       <div style={{ display: 'flex' }}>
         <Navbar />
-        <div style={{ marginLeft: '180px', flex: 1, minHeight: '100vh', background: '#f5f5f5' }}>
+        <div style={{ marginLeft: '250px', width: 'calc(100vw - 250px)', minHeight: '100vh', background: '#f5f5f5', overflowX: 'hidden' }}>
           <Routes>
             <Route path="/" element={<Accueil />} />
             <Route path="/dashboard" element={<Dashboard />} />
