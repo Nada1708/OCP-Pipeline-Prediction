@@ -1,0 +1,33 @@
+{
+  "brut": {
+    "lignes_brutes": 5967,
+    "doublons": 93,
+    "heures_manquantes": 6,
+    "heures_interpolees": 12,
+    "heures_vides": 30,
+    "jft_absent_heures": 1464,
+    "jft_absent_periode": "01/05/2024 -> 30/06/2024",
+    "jft_moyen": 292.9,
+    "heures_serie_finale": 5850,
+    "heures_arret": 19
+  },
+  "ancien_pipeline": {
+    "lignes": 5561,
+    "doublons": 23,
+    "heures_perdues": 342,
+    "plus_long_trou": {
+      "debut": "19/10/2024",
+      "fin": "01/11/2024",
+      "jours": 12.1
+    },
+    "ecart_median_cible_sans_jft": 0.0,
+    "ecart_median_cible_avec_jft": 323.2,
+    "part_vente_jour_meme": 0.99,
+    "rang_variable_mois": 3,
+    "mae_ancien_modele": 71.61,
+    "mae_persistance": 71.15,
+    "periode_test": "16/11/2024 -> 30/12/2024",
+    "r2_annonce": 0.96,
+    "mae_annoncee": 14
+  }
+}

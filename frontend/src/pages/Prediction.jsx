@@ -1,178 +1,274 @@
-import { useState } from 'react'
-import axios from 'axios'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { ComposedChart, Area, Bar, Cell, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
+import { CalendarClock, Sparkles, Loader2, LineChart as IconeCourbe } from 'lucide-react'
+import { api, ajouterHeures, COULEURS, FIABILITES, STATUTS, formatDateHeure, formatNombre, messageErreur } from '../api'
+import { Entete, Carte, Badge, Alerte } from '../components/ui'
+
+const p2 = (n) => String(n).padStart(2, '0')
+const versChamp = (d) => `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}T${p2(d.getHours())}:00`
+
+const RACCOURCIS = [
+  { label: '+1 h', cible: (derniere) => ajouterHeures(derniere, 1) },
+  { label: '+6 h', cible: (derniere) => ajouterHeures(derniere, 6) },
+  { label: '+24 h', cible: (derniere) => ajouterHeures(derniere, 24) },
+  { label: '+7 jours', cible: (derniere) => ajouterHeures(derniere, 24 * 7) },
+  { label: '+1 an', cible: (derniere) => ajouterHeures(derniere, 24 * 365) },
+  { label: "Aujourd'hui", cible: () => versChamp(new Date()), enAvant: true },
+  { label: '31 déc. 2026', cible: () => '2026-12-31T12:00', enAvant: true },
+]
+
+const ECHELLE_MAX = 2800
 
 function Prediction() {
-  const [form, setForm] = useState({
-    heure: new Date().getHours(),
-    jour_semaine: new Date().getDay() === 0 ? 6 : new Date().getDay() - 1,
-    mois: new Date().getMonth() + 1,
-    jour_mois: new Date().getDate()
-  })
+  const [searchParams] = useSearchParams()
+  const [derniere, setDerniere] = useState(null)
+  const [moyenne, setMoyenne] = useState(null)
+  const [dateHeure, setDateHeure] = useState('')
+  const [raccourci, setRaccourci] = useState(null)
   const [resultat, setResultat] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const [chargement, setChargement] = useState(false)
+  const [erreur, setErreur] = useState(null)
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: parseInt(e.target.value) })
+  const predire = async (cible) => {
+    if (!cible) {
+      setErreur('Sélectionnez une date et une heure')
+      return
+    }
+    setChargement(true)
+    setErreur(null)
+    try {
+      const res = await api.get('/predict-future', { params: { target_datetime: cible } })
+      setResultat(res.data)
+    } catch (err) {
+      setErreur(messageErreur(err))
+      setResultat(null)
+    }
+    setChargement(false)
   }
 
-  const predire = async () => {
-    setLoading(true)
-    try {
-      const res = await axios.get('http://127.0.0.1:8000/predict-auto', {
-        params: {
-          heure: form.heure,
-          jour_semaine: form.jour_semaine,
-          mois: form.mois,
-          jour_mois: form.jour_mois
+  useEffect(() => {
+    api.get('/stats')
+      .then(res => {
+        setDerniere(res.data.derniere_date)
+        setMoyenne(res.data.debit_moyen)
+        // Lien direct vers une date : /prediction?date=2026-10-29T10:00
+        const date = searchParams.get('date')
+        if (date) {
+          setDateHeure(date)
+          predire(date)
         }
       })
-      setResultat(res.data)
-    } catch {
-      alert('Erreur de prédiction')
-    }
-    setLoading(false)
+      .catch(err => setErreur(messageErreur(err)))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const choisirRaccourci = (r) => {
+    const cible = r.cible(derniere)
+    setRaccourci(r.label)
+    setDateHeure(cible)
+    predire(cible)
   }
 
-  const couleurStatut = {
-    eleve: '#00843D',
-    normal: '#2196F3',
-    faible: '#FFC107'
+  const statut = resultat && STATUTS[resultat.statut]
+  const fiabilite = resultat?.fiabilite && FIABILITES[resultat.fiabilite]
+  const pourcent = (v) => `${Math.max(0, Math.min(100, (v / ECHELLE_MAX) * 100))}%`
+  const journalier = resultat?.pas_serie === 'jour' || resultat?.pas_serie === 'semaine'
+  const DESCRIPTIONS_SERIE = {
+    heure: "Prévision heure par heure jusqu'à la date cible",
+    jour: "Moyenne journalière, de la dernière mesure jusqu'à la date cible",
+    semaine: "Moyenne hebdomadaire, de la dernière mesure jusqu'à la date cible",
   }
-
-  const jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
-  const mois = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-                 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
 
   return (
-    <div style={{ padding: '30px' }}>
+    <>
+      <Entete surtitre="Prévision" titre="Prédiction du débit"
+        description="Choisissez une date jusqu'au 31 décembre 2026. Le modèle adapté à l'horizon est sélectionné automatiquement." />
 
-      <h2 style={{ color: '#00843D', borderBottom: '2px solid #00843D', paddingBottom: '10px' }}>
-        Prédiction du Débit Horaire
-      </h2>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
-
-        <div style={{ background: 'white', padding: '30px', borderRadius: '10px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
-          <h3 style={{ color: '#00843D', marginBottom: '20px' }}>Paramètres</h3>
-
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', color: '#555', marginBottom: '8px', fontWeight: 'bold' }}>
-              Heure de prédiction
-            </label>
-            <input
-              type="number"
-              name="heure"
-              value={form.heure}
-              onChange={handleChange}
-              min={0} max={23}
-              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem' }}
-            />
-            <small style={{ color: '#888' }}>Entre 0 (minuit) et 23</small>
+      <div className="grille grille-prediction espace">
+        <Carte titre="Paramètres" description={derniere ? `Dernière mesure : ${formatDateHeure(derniere)}` : 'Chargement…'}>
+          <div className="champ" style={{ marginBottom: 18 }}>
+            <label htmlFor="date-cible">Date et heure cible</label>
+            <input id="date-cible" type="datetime-local" value={dateHeure} step={3600}
+              min={derniere ? ajouterHeures(derniere, 1) : undefined}
+              max={derniere ? ajouterHeures(derniere, 24 * 731) : undefined}
+              onChange={(e) => { setDateHeure(e.target.value); setRaccourci(null) }} />
+            <div className="aide">Horizon maximal : 31 décembre 2026</div>
           </div>
 
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', color: '#555', marginBottom: '8px', fontWeight: 'bold' }}>
-              Jour de la semaine
-            </label>
-            <select
-              name="jour_semaine"
-              value={form.jour_semaine}
-              onChange={handleChange}
-              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem' }}
-            >
-              {jours.map((j, i) => (
-                <option key={i} value={i}>{j}</option>
+          <div className="champ" style={{ marginBottom: 20 }}>
+            <label>Raccourcis</label>
+            <div className="puces">
+              {RACCOURCIS.map(r => (
+                <button key={r.label} className={`puce ${raccourci === r.label ? 'actif' : ''}`}
+                  style={r.enAvant && raccourci !== r.label ? { borderColor: 'var(--vert)', color: 'var(--vert)' } : undefined}
+                  disabled={!derniere} onClick={() => choisirRaccourci(r)}>
+                  {r.label}
+                </button>
               ))}
-            </select>
+            </div>
           </div>
 
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', color: '#555', marginBottom: '8px', fontWeight: 'bold' }}>
-              Mois
-            </label>
-            <select
-              name="mois"
-              value={form.mois}
-              onChange={handleChange}
-              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem' }}
-            >
-              {mois.map((m, i) => (
-                <option key={i} value={i + 1}>{m}</option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ marginBottom: '25px' }}>
-            <label style={{ display: 'block', color: '#555', marginBottom: '8px', fontWeight: 'bold' }}>
-              Jour du mois
-            </label>
-            <input
-              type="number"
-              name="jour_mois"
-              value={form.jour_mois}
-              onChange={handleChange}
-              min={1} max={31}
-              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem' }}
-            />
-          </div>
-
-          <button
-            onClick={predire}
-            disabled={loading}
-            style={{
-              width: '100%', padding: '14px',
-              background: loading ? '#888' : '#00843D',
-              color: 'white', border: 'none',
-              borderRadius: '8px', fontSize: '1.1rem',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              fontWeight: 'bold'
-            }}
-          >
-            {loading ? 'Calcul en cours...' : 'Prédire le débit'}
+          <button className="bouton plein" onClick={() => predire(dateHeure)} disabled={chargement}>
+            {chargement ? <><Loader2 size={18} className="tourne" /> Calcul en cours…</> : <><Sparkles size={18} /> Prédire le débit</>}
           </button>
-        </div>
 
-        <div style={{ background: 'white', padding: '30px', borderRadius: '10px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
-          <h3 style={{ color: '#00843D', marginBottom: '20px' }}>Résultat</h3>
+          {erreur && <div style={{ marginTop: 14 }}><Alerte>{erreur}</Alerte></div>}
 
+          <div style={{ marginTop: 22 }}>
+            {Object.entries(FIABILITES).map(([cle, f], i) => (
+              <div key={cle} className="ligne-info" style={{ borderTop: i === 0 ? 'none' : undefined }}>
+                <span><Badge classe={f.classe}>{f.label}</Badge></span>
+                <span style={{ fontWeight: 500, color: 'var(--texte-2)' }}>{['1 – 12 h', '12 – 24 h', '24 h – fin 2026'][i]}</span>
+              </div>
+            ))}
+          </div>
+        </Carte>
+
+        <Carte titre="Résultat">
           {resultat ? (
-            <div>
-              <div style={{
-                background: `linear-gradient(135deg, ${couleurStatut[resultat.statut]}, #005a2b)`,
-                padding: '50px', borderRadius: '15px',
-                textAlign: 'center', color: 'white', margin: '20px 0'
-              }}>
-                <div style={{ fontSize: '1rem', opacity: 0.8, marginBottom: '10px' }}>Débit prédit</div>
-                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '4rem', fontWeight: 'bold' }}>{resultat.debit_predit}</span>
-                  <span style={{ fontSize: '2rem' }}>t/h</span>
-                </div>
+            <div className="apparition">
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
+                {statut && <Badge classe={statut.classe} point>{statut.label}</Badge>}
+                {fiabilite && <Badge classe={fiabilite.classe}>{fiabilite.label}</Badge>}
+                {resultat.source === 'historique_reel' && <Badge classe="neutre">Valeur mesurée</Badge>}
               </div>
 
-              <div style={{
-                padding: '15px', borderRadius: '8px', textAlign: 'center',
-                background: couleurStatut[resultat.statut] + '20',
-                border: `2px solid ${couleurStatut[resultat.statut]}`
-              }}>
-                <b style={{ color: couleurStatut[resultat.statut], fontSize: '1.1rem' }}>
-                  {resultat.statut === 'eleve' && 'Débit élevé — Production optimale'}
-                  {resultat.statut === 'normal' && 'Débit normal — Production standard'}
-                  {resultat.statut === 'faible' && 'Débit faible — Vérifier le pipeline'}
-                </b>
+              <div style={{ color: 'var(--texte-2)', fontWeight: 500 }}>Débit prévu le {formatDateHeure(dateHeure)}</div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 6 }}>
+                <span className="resultat-valeur" style={{ color: 'var(--vert)' }}>{formatNombre(resultat.debit_predit)}</span>
+                <span style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--texte-3)' }}>t/h</span>
               </div>
+
+              {resultat.intervalle_bas !== undefined && (
+                <>
+                  <div className="jauge">
+                    <div className="jauge-plage" style={{ left: pourcent(resultat.intervalle_bas), right: `calc(100% - ${pourcent(resultat.intervalle_haut)})` }} />
+                    <div className="jauge-marqueur" style={{ left: pourcent(resultat.debit_predit) }} />
+                  </div>
+                  <div className="jauge-legende"><span>0</span><span>{formatNombre(ECHELLE_MAX)} t/h</span></div>
+                </>
+              )}
+
+              <div style={{ marginTop: 18 }}>
+                {resultat.intervalle_bas !== undefined && (
+                  <div className="ligne-info">
+                    <span>Fourchette probable (80 %)</span>
+                    <span className="num">{formatNombre(resultat.intervalle_bas)} – {formatNombre(resultat.intervalle_haut)} t/h</span>
+                  </div>
+                )}
+                <div className="ligne-info">
+                  <span>Horizon</span>
+                  <span className="num">
+                    {resultat.hours_ahead} h{resultat.hours_ahead >= 48 && ` (${formatNombre(resultat.hours_ahead / 24)} jours)`}
+                  </span>
+                </div>
+                {resultat.volume_jour_kt !== undefined && (
+                  <div className="ligne-info">
+                    <span>Volume prévu sur la journée</span>
+                    <span className="num">{formatNombre(resultat.volume_jour_kt, 1)} kt</span>
+                  </div>
+                )}
+                {moyenne && (
+                  <div className="ligne-info">
+                    <span>Écart à la moyenne historique</span>
+                    <span className="num">{resultat.debit_predit >= moyenne ? '+' : ''}{formatNombre(((resultat.debit_predit - moyenne) / moyenne) * 100, 1)} %</span>
+                  </div>
+                )}
+              </div>
+
+              {fiabilite && <div style={{ marginTop: 14 }}><Alerte info>{fiabilite.texte}</Alerte></div>}
             </div>
           ) : (
-            <div style={{ textAlign: 'center', padding: '80px', color: '#888' }}>
-              <div style={{ fontSize: '4rem', marginBottom: '20px' }}></div>
-              <p style={{ fontSize: '1.1rem' }}>
-                Sélectionnez les paramètres<br />et cliquez sur Prédire
-              </p>
+            <div className="vide">
+              <div className="vide-icone"><CalendarClock size={26} /></div>
+              <div style={{ fontWeight: 600, color: 'var(--texte-2)' }}>Aucune prédiction pour l'instant</div>
+              <div style={{ maxWidth: 320 }}>Choisissez une date ou un raccourci pour obtenir le débit prévu et sa fourchette.</div>
             </div>
           )}
-        </div>
-
+        </Carte>
       </div>
-    </div>
+
+      {resultat?.profil_jour?.length > 0 && (
+        <Carte className="espace" titre={`Profil de la journée du ${new Date(dateHeure).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`}
+          description={`Débit prévu heure par heure · volume total ${formatNombre(resultat.volume_jour_kt, 1)} kt · heure choisie en surbrillance`}
+          action={<div className="legende">
+            <span><i style={{ background: COULEURS.modele }} />Heure choisie</span>
+            <span><i style={{ background: '#9fd3b4' }} />Autres heures</span>
+            <span><i style={{ background: 'rgba(0,132,61,0.2)' }} />Fourchette 80 %</span>
+          </div>}>
+          <ResponsiveContainer width="100%" height={300}>
+            <ComposedChart data={resultat.profil_jour} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <CartesianGrid stroke={COULEURS.grille} vertical={false} />
+              <XAxis dataKey="heure" tickFormatter={(h) => `${h}h`} tick={{ fill: COULEURS.axe, fontSize: 11 }} interval={1} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: COULEURS.axe, fontSize: 11 }} axisLine={false} tickLine={false} width={50} domain={[0, 'auto']} tickFormatter={(v) => formatNombre(v)} />
+              <Tooltip cursor={{ fill: 'var(--vert-pale)' }} content={({ active, payload }) => {
+                if (!active || !payload?.length) return null
+                const p = payload[0].payload
+                return (
+                  <div className="tooltip">
+                    <div className="tooltip-titre">{p.heure}h – {p.heure + 1}h</div>
+                    <div className="tooltip-ligne">Débit prévu <b>{formatNombre(p.debit)} t/h</b></div>
+                    <div className="tooltip-ligne">Fourchette <b>{formatNombre(p.bas)} – {formatNombre(p.haut)}</b></div>
+                  </div>
+                )
+              }} />
+              <Area isAnimationActive={false} type="monotone" dataKey={(d) => [d.bas, d.haut]} stroke="none" fill={COULEURS.modele} fillOpacity={0.12} />
+              <Bar isAnimationActive={false} dataKey="debit" radius={[4, 4, 0, 0]} barSize={18}>
+                {resultat.profil_jour.map(p => (
+                  <Cell key={p.heure} fill={p.heure === new Date(dateHeure).getHours() ? COULEURS.modele : '#9fd3b4'} />
+                ))}
+              </Bar>
+              {moyenne && <ReferenceLine y={moyenne} stroke={COULEURS.moyenne} strokeDasharray="4 4" />}
+            </ComposedChart>
+          </ResponsiveContainer>
+        </Carte>
+      )}
+
+      {resultat?.serie?.length > 0 && (
+        <Carte titre="Évolution prévue" description={DESCRIPTIONS_SERIE[resultat.pas_serie]}
+          action={<div className="legende">
+            <span><i style={{ background: COULEURS.modele }} />Débit prévu</span>
+            <span><i style={{ background: 'rgba(0,132,61,0.2)' }} />Fourchette 80 %</span>
+            <span><i style={{ background: COULEURS.moyenne }} />Moyenne historique</span>
+          </div>}>
+          <ResponsiveContainer width="100%" height={340}>
+            <ComposedChart data={resultat.serie} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <CartesianGrid stroke={COULEURS.grille} vertical={false} />
+              <XAxis dataKey="date" tick={{ fill: COULEURS.axe, fontSize: 11 }} minTickGap={50} axisLine={false} tickLine={false}
+                tickFormatter={(d) => journalier ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : d.slice(11, 16)} />
+              <YAxis tick={{ fill: COULEURS.axe, fontSize: 11 }} axisLine={false} tickLine={false} width={50} domain={['auto', 'auto']} tickFormatter={(v) => formatNombre(v)} />
+              <Tooltip content={({ active, payload, label }) => {
+                if (!active || !payload?.length) return null
+                const p = payload[0].payload
+                return (
+                  <div className="tooltip">
+                    <div className="tooltip-titre">{resultat.pas_serie === 'semaine' ? `Semaine du ${new Date(label).toLocaleDateString('fr-FR', { dateStyle: 'long' })}` : journalier ? new Date(label).toLocaleDateString('fr-FR', { dateStyle: 'full' }) : label}</div>
+                    <div className="tooltip-ligne">Débit prévu <b>{formatNombre(p.debit)} t/h</b></div>
+                    <div className="tooltip-ligne">Fourchette <b>{formatNombre(p.bas)} – {formatNombre(p.haut)}</b></div>
+                  </div>
+                )
+              }} />
+              {moyenne && <ReferenceLine y={moyenne} stroke={COULEURS.moyenne} strokeDasharray="4 4" />}
+              <Area isAnimationActive={false} dataKey={(d) => [d.bas, d.haut]} stroke="none" fill={COULEURS.modele} fillOpacity={0.15} name="Fourchette" />
+              <Line isAnimationActive={false} type="monotone" dataKey="debit" stroke={COULEURS.modele} strokeWidth={2.5} dot={false} name="Débit prévu" />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </Carte>
+      )}
+
+      {!resultat && (
+        <Carte>
+          <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+            <div className="vide-icone" style={{ flexShrink: 0 }}><IconeCourbe size={22} /></div>
+            <div style={{ color: 'var(--texte-2)' }}>
+              La courbe de prévision et sa fourchette d'incertitude s'afficheront ici, heure par heure jusqu'à 3 jours,
+              puis en moyenne journalière pour les horizons plus lointains.
+            </div>
+          </div>
+        </Carte>
+      )}
+    </>
   )
 }
 
