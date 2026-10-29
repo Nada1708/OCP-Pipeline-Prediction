@@ -1,0 +1,70 @@
+{
+  "heures": 5880,
+  "heures_valides": 5850,
+  "heures_hors_arret": 5831,
+  "moyenne": 1873.5,
+  "ecart_type": 270.7,
+  "min": 506.1,
+  "max": 2499.4,
+  "heure_max": 2,
+  "heure_min": 11,
+  "moyenne_semaine": 1838.9,
+  "moyenne_weekend": 1959.7,
+  "autocorrelation": {
+    "1": 0.883,
+    "2": 0.756,
+    "3": 0.671,
+    "6": 0.486,
+    "12": 0.278,
+    "24": 0.209,
+    "48": 0.166,
+    "168": 0.058
+  },
+  "clients": {
+    "IMACID": {
+      "debit_moyen_en_marche": 285.5,
+      "part_en_marche": 0.914,
+      "changements_par_jour": 0.99
+    },
+    "JFO": {
+      "debit_moyen_en_marche": 304.9,
+      "part_en_marche": 0.949,
+      "changements_par_jour": 0.56
+    },
+    "JFD": {
+      "debit_moyen_en_marche": 298.5,
+      "part_en_marche": 0.832,
+      "changements_par_jour": 0.54
+    },
+    "JFT": {
+      "debit_moyen_en_marche": 304.1,
+      "part_en_marche": 0.961,
+      "changements_par_jour": 0.51
+    },
+    "JFQ": {
+      "debit_moyen_en_marche": 311.3,
+      "part_en_marche": 0.951,
+      "changements_par_jour": 0.46
+    },
+    "JFF": {
+      "debit_moyen_en_marche": 228.2,
+      "part_en_marche": 0.848,
+      "changements_par_jour": 1.3
+    },
+    "PMP": {
+      "debit_moyen_en_marche": 252.3,
+      "part_en_marche": 0.928,
+      "changements_par_jour": 1.25
+    }
+  },
+  "moyenne_mensuelle": {
+    "5": 1693.5,
+    "6": 1937.2,
+    "7": 1892.2,
+    "8": 1957.4,
+    "9": 1975.0,
+    "10": 1807.4,
+    "11": 1861.7,
+    "12": 1866.0
+  }
+}

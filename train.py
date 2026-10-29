@@ -143,6 +143,19 @@ def figures(directs, res_long, predictions_test, importance_h1):
     plt.savefig(C.REPORTS_DIR / "mae_par_horizon.png", dpi=150)
     plt.close()
 
+    plt.figure(figsize=(10, 4.5))
+    plt.bar(h, [directs[str(i)]["couverture_80_test"] * 100 for i in h], color="#00843D")
+    plt.axhline(80, color="#C55A11", linestyle="--", label="Cible : 80 %")
+    plt.ylim(50, 100)
+    plt.xlabel("Horizon de prévision (h)")
+    plt.ylabel("Couverture sur le test (%)")
+    plt.title("Part des valeurs réelles comprises dans la fourchette à 80 %")
+    plt.legend()
+    plt.grid(True, axis="y", alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(C.REPORTS_DIR / "couverture_80.png", dpi=150)
+    plt.close()
+
     p = predictions_test[1].iloc[:24 * 14]
     plt.figure(figsize=(14, 5))
     plt.plot(p["date"], p["reel"], color="#2E75B6", linewidth=1.2, label="Réel")
